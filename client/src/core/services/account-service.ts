@@ -12,7 +12,6 @@ export class AccountService {
   currentUser = signal<User | null>(null);
   baseUrl = 'https://localhost:5001/api/';
 
-
   register(creds: RegisterCreds) {
     return this.http.post<User>(this.baseUrl + 'account/register', creds).pipe(
       tap(user => {
@@ -30,19 +29,13 @@ export class AccountService {
           this.setCurrentUser(user);
         }
       })
-
     );
   }
 
   setCurrentUser(user: User) {
     localStorage.setItem('user', JSON.stringify(user));
     this.currentUser.set(user)
-  
   }
-
-  
-
-
 
   logout() {
     localStorage.removeItem('user');
