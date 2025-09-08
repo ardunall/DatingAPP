@@ -12,7 +12,4 @@ import { Nav } from "../layout/nav/nav";
 export class App {
   protected router = inject(Router);
 
-  
-
-
 }
