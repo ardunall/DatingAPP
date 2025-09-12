@@ -30,7 +30,6 @@ namespace API.Controllers
             context.Users.Add(user);
             await context.SaveChangesAsync();
             return user.ToDTO(tokenService);
-
         }
 
         [HttpPost("login")]
