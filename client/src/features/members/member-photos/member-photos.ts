@@ -1,11 +1,11 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Member, Photo } from '../../../types/member';
 import { MemberService } from '../../../core/services/member-service';
-import { Observable } from 'rxjs';
-import { AsyncPipe } from '@angular/common';
 import { ImageUpload } from "../../../shared/image-upload/image-upload";
-import { errorContext } from 'rxjs/internal/util/errorContext';
+import { AccountService } from '../../../core/services/account-service';
+import { User } from '../../../types/user';
+import { ToastService } from '../../../core/services/toast-service';
 
 @Component({
   selector: 'app-member-photos',
@@ -19,7 +19,9 @@ export class MemberPhotos implements OnInit {
   private route = inject(ActivatedRoute)
   protected photos = signal<Photo[]>([])
   protected loading = signal(false)
-
+  protected accountService = inject(AccountService)
+  protected toastService = inject(ToastService)
+  //protected isCurrentUser = computed(() => { return this.accountService.currentUser()?.id === this.route.parent?.snapshot.paramMap.get("id")}) 
 
   ngOnInit(): void {
     const memberId = this.route.parent?.snapshot.paramMap.get("id")
@@ -30,20 +32,51 @@ export class MemberPhotos implements OnInit {
     }
   }
 
-  onUploadImage(file: File){
+  onUploadImage(file: File) {
     this.loading.set(true)
     this.memberService.uploadPhoto(file).subscribe({
-      next: photo =>{
+      next: photo => {
         this.memberService.editMode.set(false)
         this.loading.set(false)
-        this.photos.update(photos =>[...photos,photo])
+        this.photos.update(photos => [...photos, photo])
       },
-      error: error=>{
+      error: error => {
         console.log("Error uploading image", error)
         this.loading.set(false)
       }
     })
 
   }
+
+  setMainPhoto(photo: Photo) {
+    this.memberService.setMainPhoto(photo).subscribe({
+      next: () => {
+        const currentUser = this.accountService.currentUser()
+        if (currentUser) currentUser.imageUrl = photo.url
+        this.accountService.setCurrentUser(currentUser as User)
+        this.memberService.member.update(member => ({ ...member, imageUrl: photo.url } as Member))
+      }
+
+    })
+
+  }
+
+
+  deletePhoto(photoId: Number){
+    this.memberService.deletePhoto(photoId).subscribe({
+      next: () =>{
+        this.photos.update(photos => photos.filter(x => x.id != photoId))
+      },
+      error: () => {
+      }
+
+
+
+    })
+
+  }
+
+
+
 
 }
